@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "APPaso - Plataforma Educativa",
-  description: "Plataforma educativa para gestionar cursos y aprendizaje de manera eficiente",
+  title: "Intensivo IGCSE B&N - Preparación iGCSE",
+  description: "Curso teórico-práctico de preparación para iGCSE con tutores experimentados. Biología, Química, Física y Matemáticas.",
 };
 
 export default function RootLayout({

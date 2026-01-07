@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { isAuthenticated, getUserRole, removeAuthToken } from "@/lib/auth";
-import { LogOut, Menu, X, BookOpen, User, GraduationCap, Heart, Home } from "lucide-react";
+import { LogOut, Menu, X, BookOpen, User, GraduationCap, Home, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export function Navbar() {
@@ -42,19 +42,25 @@ export function Navbar() {
     ];
 
     // Role-specific links
-    if (userRole === "student") {
+    if (userRole === "admin") {
+      return [
+        ...baseLinks,
+        { href: "/admin", label: "Admin", icon: Shield },
+        { href: "/courses", label: "Cursos", icon: BookOpen },
+        { href: "/inscriptions", label: "Inscripciones", icon: GraduationCap },
+        { href: "/profile", label: "Perfil", icon: User },
+      ];
+    } else if (userRole === "student") {
       return [
         ...baseLinks,
         { href: "/courses", label: "Cursos", icon: BookOpen },
         { href: "/inscriptions", label: "Inscripciones", icon: GraduationCap },
-        { href: "/donations", label: "Donaciones", icon: Heart },
         { href: "/profile", label: "Perfil", icon: User },
       ];
     } else if (userRole === "professor") {
       return [
         ...baseLinks,
         { href: "/inscriptions", label: "Inscripciones", icon: GraduationCap },
-        { href: "/donations", label: "Donaciones", icon: Heart },
         { href: "/profile", label: "Perfil", icon: User },
       ];
     }
@@ -64,7 +70,6 @@ export function Navbar() {
       ...baseLinks,
       { href: "/courses", label: "Cursos", icon: BookOpen },
       { href: "/inscriptions", label: "Inscripciones", icon: GraduationCap },
-      { href: "/donations", label: "Donaciones", icon: Heart },
       { href: "/profile", label: "Perfil", icon: User },
     ];
   };
@@ -77,8 +82,20 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href={isAuthenticatedUser ? "/dashboard" : "/"} className="flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">APPaso</span>
+            <img
+              src="/logo.jpg"
+              alt="Intensivo IGCSE B&N Logo"
+              className="h-8 w-8 object-contain"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                if (img.src.includes("logo.jpg") && !img.src.includes("logo-copy")) {
+                  img.src = "/logo-copy.jpg";
+                } else {
+                  img.style.display = "none";
+                }
+              }}
+            />
+            <span className="text-xl font-bold">Intensivo IGCSE B&N</span>
           </Link>
 
           {/* Desktop Navigation */}

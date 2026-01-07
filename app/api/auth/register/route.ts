@@ -5,6 +5,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, email, password, role } = body;
 
+    // CRITICAL: Prevent registering with admin role
+    if (role === "admin") {
+      return Response.json(
+        { error: "No se puede registrar con rol administrador" },
+        { status: 403 }
+      );
+    }
+
     const res = await fetch(`${BACKEND_URL}/auth/register`, {
       method: "POST",
       headers: {

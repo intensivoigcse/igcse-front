@@ -22,10 +22,12 @@ export function SignupForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState<"student" | "professor">("student");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  
+  // Solo estudiantes pueden registrarse desde aquí
+  const role: "student" = "student";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,19 +121,6 @@ export function SignupForm({
                 </FieldDescription>
               </Field>
               <Field>
-                <FieldLabel htmlFor="role">Rol</FieldLabel>
-                <select
-                  id="role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as "student" | "professor")}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  required
-                >
-                  <option value="student">Estudiante</option>
-                  <option value="professor">Profesor</option>
-                </select>
-              </Field>
-              <Field>
                 <Field className="grid grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel htmlFor="password">Contraseña</FieldLabel>
@@ -179,10 +168,6 @@ export function SignupForm({
           </div>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
-        Al continuar, aceptas nuestros <a href="#" className="underline">Términos de Servicio</a>{" "}
-        y <a href="#" className="underline">Política de Privacidad</a>.
-      </FieldDescription>
     </div>
   );
 }
