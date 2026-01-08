@@ -50,7 +50,7 @@ export function AdminAssignmentsManager() {
       const allAssignments: Assignment[] = [];
       
       await Promise.all(
-        courses.map(async (course: any) => {
+        courses.map(async (course: { id: string; title?: string; name?: string }) => {
           try {
             const assignmentsRes = await fetch(`/api/assignments/course/${course.id}`);
             if (assignmentsRes.ok) {
@@ -77,7 +77,7 @@ export function AdminAssignmentsManager() {
                     const submissions = await submissionsRes.json();
                     if (Array.isArray(submissions)) {
                       submissionsCount = submissions.length;
-                      gradedCount = submissions.filter((s: any) => {
+                      gradedCount = submissions.filter((s: { submission?: { score?: number }; score?: number }) => {
                         const score = s.submission?.score ?? s.score;
                         return score != null && score !== undefined;
                       }).length;

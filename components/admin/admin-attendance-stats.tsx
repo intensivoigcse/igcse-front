@@ -7,7 +7,7 @@ import { ClipboardCheck } from "lucide-react";
 
 export function AdminAttendanceStats() {
   const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
 
   useEffect(() => {
     fetchData();

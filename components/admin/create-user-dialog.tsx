@@ -10,7 +10,7 @@ import { X } from "lucide-react";
 interface CreateUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUserCreated: (user: any) => void;
+  onUserCreated: (user: { id: string | number; name: string; email: string; role: "student" | "professor" | "admin"; createdAt?: string; updatedAt?: string }) => void;
 }
 
 export function CreateUserDialog({
@@ -53,13 +53,6 @@ export function CreateUserDialog({
     // Validate password confirmation
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden");
-      setLoading(false);
-      return;
-    }
-
-    // Prevent creating admin users
-    if (role === "admin") {
-      setError("No se pueden crear usuarios con rol administrador desde esta interfaz");
       setLoading(false);
       return;
     }

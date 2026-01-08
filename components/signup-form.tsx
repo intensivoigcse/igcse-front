@@ -27,7 +27,7 @@ export function SignupForm({
   const router = useRouter();
   
   // Solo estudiantes pueden registrarse desde aquí
-  const role: "student" = "student";
+  const role = "student" as const;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -57,7 +57,7 @@ export function AdminCoursesManager() {
         // Enrich courses with professor names
         const enrichedCourses = await Promise.all(
           coursesArray.map(async (course: Course) => {
-            const professor = usersArray.find((u: any) => u.id === course.professor_id);
+            const professor = usersArray.find((u: { id: string | number }) => String(u.id) === String(course.professor_id));
             
             // Fetch students count
             let studentsCount = 0;

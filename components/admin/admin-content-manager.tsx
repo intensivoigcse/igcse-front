@@ -23,8 +23,8 @@ import {
 type TabType = "forums" | "announcements" | "materials";
 
 interface ForumThread {
-  id: number;
-  courseId: number;
+  id: string | number;
+  courseId: string | number;
   title: string;
   content: string;
   createdAt: string;
@@ -35,8 +35,8 @@ interface ForumThread {
 }
 
 interface Announcement {
-  id: number;
-  courseId: number;
+  id: string | number;
+  courseId: string | number;
   title: string;
   content: string;
   createdAt: string;
@@ -44,12 +44,12 @@ interface Announcement {
 }
 
 interface Material {
-  id: number;
-  courseId: number;
+  id: string | number;
+  courseId: string | number;
   name: string;
   description?: string;
   fileUrl: string;
-  folderId?: number;
+  folderId?: string | number;
   createdAt: string;
   course?: { title: string; name: string };
   folder?: { name: string };
@@ -107,7 +107,7 @@ export function AdminContentManager() {
       const allThreads: ForumThread[] = [];
       
       await Promise.all(
-        courses.map(async (course: any) => {
+        courses.map(async (course: { id: string; title?: string; name?: string }) => {
           try {
             const threadsRes = await fetch(`/api/forums/course/${course.id}`);
             if (threadsRes.ok) {
@@ -180,7 +180,7 @@ export function AdminContentManager() {
       const allAnnouncements: Announcement[] = [];
       
       await Promise.all(
-        courses.map(async (course: any) => {
+        courses.map(async (course: { id: string; title?: string; name?: string }) => {
           try {
             const announcementsRes = await fetch(`/api/announcements/course/${course.id}`);
             if (announcementsRes.ok) {
@@ -190,7 +190,7 @@ export function AdminContentManager() {
                 : announcementsData.announcements || [];
               console.log(`Announcements for course ${course.id} (${course.title || course.name}):`, courseAnnouncements.length);
               
-              courseAnnouncements.forEach((announcement: any, index: number) => {
+              courseAnnouncements.forEach((announcement: { id?: string; announcement_id?: string; announcementId?: string; courseId?: string; course_id?: string; createdAt?: string; created_at?: string; publishedAt?: string; published_at?: string; title?: string; content?: string; description?: string; isPinned?: boolean; is_pinned?: boolean }, index: number) => {
                 const announcementId = announcement.id || announcement.announcement_id || announcement.announcementId || `announcement-${course.id}-${index}`;
                 const createdAt = announcement.createdAt || announcement.created_at || announcement.publishedAt || announcement.published_at || new Date().toISOString();
                 
@@ -203,7 +203,7 @@ export function AdminContentManager() {
                   title: announcement.title || 'Sin título',
                   content: announcement.content || announcement.description || '',
                   createdAt: createdAt,
-                  course: { title: course.title || course.name, name: course.name },
+                  course: { title: course.title || course.name || '', name: course.name || '' },
                 });
               });
             }
@@ -242,7 +242,7 @@ export function AdminContentManager() {
       const allMaterials: Material[] = [];
       
       await Promise.all(
-        courses.map(async (course: any) => {
+        courses.map(async (course: { id: string; title?: string; name?: string }) => {
           try {
             const materialsRes = await fetch(`/api/courses/${course.id}/materials`);
             if (materialsRes.ok) {
@@ -254,7 +254,7 @@ export function AdminContentManager() {
               const folders = materialsData.folders || [];
               
               // Agregar documentos del nivel raíz
-              rootDocuments.forEach((material: any, index: number) => {
+              rootDocuments.forEach((material: { id?: string; documentId?: string; document_id?: string; name?: string; fileName?: string; title?: string; description?: string; fileUrl?: string; signedFileUrl?: string; file_url?: string; url?: string; folderId?: string; folder_id?: string; folder?: { name: string }; createdAt?: string; created_at?: string }, index: number) => {
                 const materialId = material.id || material.documentId || material.document_id || `doc-${course.id}-root-${index}`;
                 
                 allMaterials.push({
@@ -265,7 +265,7 @@ export function AdminContentManager() {
                   fileUrl: material.fileUrl || material.signedFileUrl || material.url || '',
                   folderId: material.folderId || material.folder_id,
                   createdAt: material.createdAt || material.created_at || new Date().toISOString(),
-                  course: { title: course.title || course.name, name: course.name },
+                  course: { title: course.title || course.name || '', name: course.name || '' },
                   folder: material.folder,
                 });
               });
@@ -283,7 +283,7 @@ export function AdminContentManager() {
                     
                     console.log(`Documents in folder "${folderName}" (${folderId}):`, folderDocuments.length);
                     
-                    folderDocuments.forEach((material: any, index: number) => {
+                    folderDocuments.forEach((material: { id?: string; documentId?: string; document_id?: string; name?: string; fileName?: string; title?: string; description?: string; fileUrl?: string; signedFileUrl?: string; url?: string; createdAt?: string; created_at?: string }, index: number) => {
                       const materialId = material.id || material.documentId || material.document_id || `doc-${course.id}-${folderId}-${index}`;
                       
                       allMaterials.push({
@@ -294,7 +294,7 @@ export function AdminContentManager() {
                         fileUrl: material.fileUrl || material.signedFileUrl || material.url || '',
                         folderId: folderId,
                         createdAt: material.createdAt || material.created_at || new Date().toISOString(),
-                        course: { title: course.title || course.name, name: course.name },
+                        course: { title: course.title || course.name || '', name: course.name || '' },
                         folder: { name: folderName },
                       });
                     });
@@ -322,7 +322,7 @@ export function AdminContentManager() {
     }
   };
 
-  const handleDeleteForum = async (id: number) => {
+  const handleDeleteForum = async (id: string | number) => {
     if (!confirm("¿Estás seguro de que deseas eliminar este hilo del foro?")) return;
 
     try {
@@ -342,7 +342,7 @@ export function AdminContentManager() {
     }
   };
 
-  const handleDeleteAnnouncement = async (id: number) => {
+  const handleDeleteAnnouncement = async (id: string | number) => {
     if (!confirm("¿Estás seguro de que deseas eliminar este anuncio?")) return;
 
     try {
@@ -362,7 +362,7 @@ export function AdminContentManager() {
     }
   };
 
-  const handleDeleteMaterial = async (id: number) => {
+  const handleDeleteMaterial = async (id: string | number) => {
     if (!confirm("¿Estás seguro de que deseas eliminar este material?")) return;
 
     try {
@@ -478,7 +478,7 @@ export function AdminContentManager() {
       {loading ? (
         <LoadingSpinner text="Cargando..." />
       ) : error ? (
-        <ErrorMessage message={error} onRetry={fetchData} />
+        <ErrorMessage message={error} onRetry={fetchAllData} />
       ) : (
         <div>
           {/* FOROS */}

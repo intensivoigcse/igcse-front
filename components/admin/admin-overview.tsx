@@ -56,10 +56,10 @@ export function AdminOverview() {
       const coursesArray = Array.isArray(courses) ? courses : courses.courses || [];
       const inscriptionsArray = Array.isArray(inscriptions) ? inscriptions : inscriptions.inscriptions || [];
 
-      const students = usersArray.filter((u: any) => u.role === "student");
-      const professors = usersArray.filter((u: any) => u.role === "professor");
-      const pending = inscriptionsArray.filter((i: any) => i.enrollment_status === "pending");
-      const active = inscriptionsArray.filter((i: any) => i.enrollment_status === "active" || i.enrollment_status === "accepted");
+      const students = usersArray.filter((u: { role: string }) => u.role === "student");
+      const professors = usersArray.filter((u: { role: string }) => u.role === "professor");
+      const pending = inscriptionsArray.filter((i: { enrollment_status: string }) => i.enrollment_status === "pending");
+      const active = inscriptionsArray.filter((i: { enrollment_status: string }) => i.enrollment_status === "active" || i.enrollment_status === "accepted");
 
       setStats({
         totalUsers: usersArray.length,

@@ -267,9 +267,9 @@ export default function Home() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="font-semibold text-lg mb-3">Enfoque en "Key Words"</h3>
+                  <h3 className="font-semibold text-lg mb-3">Enfoque en &ldquo;Key Words&rdquo;</h3>
                   <p className="text-muted-foreground mb-4">
-                    Para reforzar los contenidos, se hará énfasis en los <strong>"key words"</strong>. 
+                    Para reforzar los contenidos, se hará énfasis en los <strong>&ldquo;key words&rdquo;</strong>. 
                     El motivo de esto, es que son estas las palabras que otorgan puntaje en las pruebas escritas.
                   </p>
                 </div>

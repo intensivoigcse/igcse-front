@@ -10,12 +10,12 @@ import { CreateUserDialog } from "@/components/admin/create-user-dialog";
 import { Plus, Search, Edit, Trash2, User } from "lucide-react";
 
 interface User {
-  id: number;
+  id: string | number;
   name: string;
   email: string;
   role: "student" | "professor" | "admin";
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export function AdminUsersManager() {
@@ -75,7 +75,7 @@ export function AdminUsersManager() {
     setFilteredUsers(filtered);
   };
 
-  const handleDeleteUser = async (id: number) => {
+  const handleDeleteUser = async (id: string | number) => {
     if (!confirm("¿Estás seguro de que deseas eliminar este usuario?")) return;
 
     try {
@@ -237,7 +237,7 @@ export function AdminUsersManager() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-muted-foreground">
-                        {new Date(user.createdAt).toLocaleDateString("es-CL")}
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString("es-CL") : 'N/A'}
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-end gap-2">

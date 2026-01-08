@@ -7,7 +7,7 @@ import { DollarSign } from "lucide-react";
 
 export function AdminDonationsManager() {
   const [loading, setLoading] = useState(true);
-  const [donations, setDonations] = useState<any[]>([]);
+  const [donations, setDonations] = useState<Array<{ id: string; amount: number; createdAt?: string; status?: string; user?: { name?: string; email?: string } }>>([]);
 
   useEffect(() => {
     fetchData();
@@ -27,7 +27,8 @@ export function AdminDonationsManager() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status?: string) => {
+    if (!status) return "bg-gray-100 text-gray-800";
     const colors: Record<string, string> = {
       pending: "bg-amber-100 text-amber-800",
       approved: "bg-green-100 text-green-800",
@@ -63,12 +64,12 @@ export function AdminDonationsManager() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {donations.map((donation: any) => (
+            {donations.map((donation: { id: string; amount?: number; createdAt?: string; status?: string; user?: { name?: string; email?: string } }) => (
               <div key={donation.id} className="flex items-center justify-between p-3 border rounded">
                 <div>
                   <p className="font-medium">${donation.amount?.toLocaleString("es-CL")}</p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(donation.createdAt).toLocaleDateString("es-CL")}
+                    {donation.createdAt ? new Date(donation.createdAt).toLocaleDateString("es-CL") : 'N/A'}
                   </p>
                 </div>
                 <span className={`px-2 py-1 text-xs rounded ${getStatusBadge(donation.status)}`}>
