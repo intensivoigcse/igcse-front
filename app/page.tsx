@@ -641,9 +641,9 @@ export default function Home() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Link href="/signup">
+            <Link href="/login">
               <Button size="lg" className="w-full sm:w-auto text-lg px-8">
-                Inscribirse
+                Iniciar Sesión
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -704,17 +704,24 @@ export default function Home() {
             Únete a nuestro programa de preparación iGCSE y alcanza tus metas académicas
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/signup">
+            <Link href="/login">
               <Button size="lg" className="w-full sm:w-auto">
-                Inscribirse Ahora
+                Iniciar Sesión
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                Iniciar Sesión
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="w-full sm:w-auto"
+              onClick={() => {
+                setActiveTab("contacto");
+                scrollToTabs();
+              }}
+            >
+              <Phone className="mr-2 h-4 w-4" />
+              Contacto
+            </Button>
           </div>
         </div>
       </section>
