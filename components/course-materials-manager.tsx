@@ -13,10 +13,13 @@ import {
   ChevronRight,
   Home,
   Trash2,
-  Eye,
+  Eye as EyeIcon,
   EyeOff,
   Download,
   MoreVertical,
+  Maximize,
+  Minimize,
+  X,
 } from "lucide-react";
 
 interface Folder {
@@ -63,6 +66,9 @@ export function CourseMaterialsManager({
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([
     { id: null, name: "Raíz" },
   ]);
+  const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     fetchMaterials();
@@ -188,6 +194,48 @@ export function CourseMaterialsManager({
     });
   };
 
+  const handlePreview = (doc: Document) => {
+    setPreviewDocument(doc);
+    setIsPreviewOpen(true);
+  };
+
+  const closePreview = () => {
+    if (isFullscreen && document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+    setIsPreviewOpen(false);
+    setPreviewDocument(null);
+    setIsFullscreen(false);
+  };
+
+  const toggleFullscreen = async () => {
+    const modalElement = document.getElementById('pdf-preview-modal-prof');
+    if (!modalElement) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await modalElement.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (err) {
+      console.error('Error toggling fullscreen:', err);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -263,7 +311,7 @@ export function CourseMaterialsManager({
                             <p className="text-xs text-muted-foreground">
                               {folder.studentVisible ? (
                                 <span className="flex items-center gap-1">
-                                  <Eye className="h-3 w-3" /> Visible
+                                  <EyeIcon className="h-3 w-3" /> Visible
                                 </span>
                               ) : (
                                 <span className="flex items-center gap-1">
@@ -324,10 +372,18 @@ export function CourseMaterialsManager({
                             }
                           >
                             {doc.studentVisible ? (
-                              <Eye className="h-4 w-4 text-emerald-600" />
+                              <EyeIcon className="h-4 w-4 text-emerald-600" />
                             ) : (
                               <EyeOff className="h-4 w-4 text-muted-foreground" />
                             )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => handlePreview(doc)}
+                            title="Vista Previa"
+                          >
+                            <EyeIcon className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -377,6 +433,69 @@ export function CourseMaterialsManager({
               </CardContent>
             </Card>
           )}
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {isPreviewOpen && previewDocument && (
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
+          <div 
+            id="pdf-preview-modal-prof"
+            className="w-full h-full max-w-7xl max-h-[90vh] bg-background rounded-lg shadow-2xl flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-primary" />
+                <div>
+                  <h3 className="font-semibold">{previewDocument.name}</h3>
+                  <p className="text-xs text-muted-foreground">Vista previa</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleFullscreen}
+                  className="gap-2"
+                  title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+                >
+                  {isFullscreen ? (
+                    <Minimize className="h-4 w-4" />
+                  ) : (
+                    <Maximize className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={closePreview}
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+
+            {/* PDF Viewer */}
+            <div className="flex-1 overflow-hidden relative bg-muted/50">
+              <iframe
+                src={`${previewDocument.signedFileUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                className="w-full h-full border-0"
+                title={previewDocument.name}
+                style={{
+                  pointerEvents: 'auto',
+                }}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+              {/* Overlay para prevenir clic derecho en ciertas zonas */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{ userSelect: 'none' }}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

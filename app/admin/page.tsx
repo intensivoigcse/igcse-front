@@ -8,7 +8,6 @@ import {
   UserCheck, 
   ClipboardCheck, 
   FileText, 
-  DollarSign,
   MessageSquare 
 } from "lucide-react";
 import { AdminOverview } from "@/components/admin/admin-overview";
@@ -17,7 +16,6 @@ import { AdminCoursesManager } from "@/components/admin/admin-courses-manager";
 import { AdminInscriptionsManager } from "@/components/admin/admin-inscriptions-manager";
 import { AdminAttendanceStats } from "@/components/admin/admin-attendance-stats";
 import { AdminAssignmentsManager } from "@/components/admin/admin-assignments-manager";
-import { AdminDonationsManager } from "@/components/admin/admin-donations-manager";
 import { AdminContentManager } from "@/components/admin/admin-content-manager";
 
 type TabType = 
@@ -27,7 +25,6 @@ type TabType =
   | "inscriptions" 
   | "attendance" 
   | "assignments" 
-  | "donations" 
   | "content";
 
 const tabs = [
@@ -37,7 +34,6 @@ const tabs = [
   { id: "inscriptions" as TabType, label: "Inscripciones", icon: UserCheck },
   { id: "attendance" as TabType, label: "Asistencia", icon: ClipboardCheck },
   { id: "assignments" as TabType, label: "Tareas & Entregas", icon: FileText },
-  { id: "donations" as TabType, label: "Donaciones", icon: DollarSign },
   { id: "content" as TabType, label: "Contenido", icon: MessageSquare },
 ];
 
@@ -58,8 +54,6 @@ export default function AdminDashboard() {
         return <AdminAttendanceStats />;
       case "assignments":
         return <AdminAssignmentsManager />;
-      case "donations":
-        return <AdminDonationsManager />;
       case "content":
         return <AdminContentManager />;
       default:
@@ -115,5 +109,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
-

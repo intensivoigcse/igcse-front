@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { ErrorMessage } from "@/components/error-message";
-import { UserCheck, Check, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 interface Inscription {
   id: number;
@@ -34,10 +34,57 @@ export function AdminInscriptionsManager() {
       const res = await fetch("/api/inscriptions");
       if (res.ok) {
         const data = await res.json();
+        console.log("Inscriptions data received:", data);
         const inscriptionsArray = Array.isArray(data) ? data : data.inscriptions || [];
-        setInscriptions(inscriptionsArray);
+        
+        // Cargar datos de usuarios y cursos si no vienen incluidos
+        const inscriptionsWithDetails = await Promise.all(
+          inscriptionsArray.map(async (inscription: Inscription) => {
+            // Si ya tiene los datos de user y course, no hacer fetch adicional
+            if (inscription.user && inscription.course) {
+              return inscription;
+            }
+
+            // Cargar datos del usuario si no existen
+            let userData = inscription.user;
+            if (!userData && inscription.userId) {
+              try {
+                const userRes = await fetch(`/api/users/${inscription.userId}`);
+                if (userRes.ok) {
+                  userData = await userRes.json();
+                }
+              } catch (err) {
+                console.error(`Error loading user ${inscription.userId}:`, err);
+              }
+            }
+
+            // Cargar datos del curso si no existen
+            let courseData = inscription.course;
+            if (!courseData && inscription.courseId) {
+              try {
+                const courseRes = await fetch(`/api/courses/${inscription.courseId}`);
+                if (courseRes.ok) {
+                  const courseFullData = await courseRes.json();
+                  courseData = { title: courseFullData.title || courseFullData.name };
+                }
+              } catch (err) {
+                console.error(`Error loading course ${inscription.courseId}:`, err);
+              }
+            }
+
+            return {
+              ...inscription,
+              user: userData,
+              course: courseData,
+            };
+          })
+        );
+
+        setInscriptions(inscriptionsWithDetails);
+      } else {
+        setError("Error al cargar inscripciones");
       }
-    } catch (err) {
+    } catch {
       setError("Error al cargar inscripciones");
     } finally {
       setLoading(false);
@@ -51,9 +98,18 @@ export function AdminInscriptionsManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enrollment_status: status }),
       });
-      if (res.ok) fetchInscriptions();
+      
+      if (res.ok) {
+        fetchInscriptions();
+        alert("Inscripción actualizada exitosamente");
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Error del servidor:", errorData);
+        alert(`Error al actualizar inscripción: ${errorData.error || errorData.message || "Error desconocido"}`);
+      }
     } catch (err) {
-      alert("Error al actualizar inscripción");
+      console.error("Error en la petición:", err);
+      alert("Error al actualizar inscripción. Por favor, intenta de nuevo.");
     }
   };
 

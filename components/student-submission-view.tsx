@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +12,11 @@ import {
   ArrowLeft,
   Download,
   File,
+  Eye,
+  Maximize,
+  Minimize,
+  X,
+  Trash2,
 } from "lucide-react";
 import type { Assignment } from "@/lib/mock-course-data";
 
@@ -36,13 +42,20 @@ interface StudentSubmissionViewProps {
   submission: Submission;
   assignment: Assignment;
   onBack: () => void;
+  onSubmissionDeleted?: () => void;
 }
 
 export function StudentSubmissionView({
   submission,
   assignment,
   onBack,
+  onSubmissionDeleted,
 }: StudentSubmissionViewProps) {
+  const [previewDocument, setPreviewDocument] = useState<SubmissionDocument | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("es-ES", {
       day: "numeric",
@@ -54,6 +67,81 @@ export function StudentSubmissionView({
   };
 
   const isGraded = submission.score !== null && submission.comments !== null;
+
+  const handlePreview = (doc: SubmissionDocument) => {
+    setPreviewDocument(doc);
+    setIsPreviewOpen(true);
+  };
+
+  const closePreview = () => {
+    if (isFullscreen && document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+    setIsPreviewOpen(false);
+    setPreviewDocument(null);
+    setIsFullscreen(false);
+  };
+
+  const toggleFullscreen = async () => {
+    const modalElement = document.getElementById('pdf-preview-modal-submission');
+    if (!modalElement) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await modalElement.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (err) {
+      console.error('Error toggling fullscreen:', err);
+    }
+  };
+
+  const handleDeleteSubmission = async () => {
+    if (isGraded) {
+      alert("No puedes anular una entrega que ya ha sido calificada.");
+      return;
+    }
+
+    if (!confirm("¿Estás seguro de que deseas anular esta entrega? Esta acción no se puede deshacer y podrás volver a entregar la tarea.")) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const res = await fetch(`/api/submissions/${submission.id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        alert("Entrega anulada exitosamente. Puedes volver a entregar la tarea.");
+        if (onSubmissionDeleted) {
+          onSubmissionDeleted();
+        }
+        onBack();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Error al anular la entrega");
+      }
+    } catch (err) {
+      alert("Error al anular la entrega. Por favor, intenta de nuevo.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   return (
     <div className="space-y-6 p-6">
@@ -73,6 +161,17 @@ export function StudentSubmissionView({
             </p>
           </div>
         </div>
+        {!isGraded && (
+          <Button
+            variant="destructive"
+            onClick={handleDeleteSubmission}
+            disabled={isDeleting}
+            className="gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            {isDeleting ? "Anulando..." : "Anular Entrega"}
+          </Button>
+        )}
       </div>
 
       {/* Submission Info Card */}
@@ -144,15 +243,26 @@ export function StudentSubmissionView({
                   >
                     <File className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                     <span className="text-sm flex-1 truncate">{doc.name}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => window.open(doc.fileUrl, "_blank")}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                      title="Descargar archivo"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => handlePreview(doc)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Vista previa"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => window.open(doc.fileUrl, "_blank")}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Descargar archivo"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -198,6 +308,68 @@ export function StudentSubmissionView({
           </div>
         </CardContent>
       </Card>
+
+      {/* Preview Modal */}
+      {isPreviewOpen && previewDocument && (
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
+          <div 
+            id="pdf-preview-modal-submission"
+            className="w-full h-full max-w-7xl max-h-[90vh] bg-background rounded-lg shadow-2xl flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-primary" />
+                <div>
+                  <h3 className="font-semibold">{previewDocument.name}</h3>
+                  <p className="text-xs text-muted-foreground">Vista previa de tu entrega</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleFullscreen}
+                  className="gap-2"
+                  title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+                >
+                  {isFullscreen ? (
+                    <Minimize className="h-4 w-4" />
+                  ) : (
+                    <Maximize className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={closePreview}
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+
+            {/* PDF Viewer */}
+            <div className="flex-1 overflow-hidden relative bg-muted/50">
+              <iframe
+                src={`${previewDocument.fileUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                className="w-full h-full border-0"
+                title={previewDocument.name}
+                style={{
+                  pointerEvents: 'auto',
+                }}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{ userSelect: 'none' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

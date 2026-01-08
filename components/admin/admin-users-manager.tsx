@@ -145,7 +145,7 @@ export function AdminUsersManager() {
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)} size="lg">
           <Plus className="h-4 w-4 mr-2" />
-          Crear Profesor
+          Crear Usuario
         </Button>
       </div>
 

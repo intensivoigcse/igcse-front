@@ -17,6 +17,10 @@ import {
   Edit,
   Download,
   File,
+  Eye,
+  Maximize,
+  Minimize,
+  X,
 } from "lucide-react";
 import type { Assignment } from "@/lib/mock-course-data";
 
@@ -90,6 +94,9 @@ export function AssignmentSubmissionsView({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [previewDocument, setPreviewDocument] = useState<SubmissionDocument | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const fetchStudents = useCallback(async () => {
     try {
@@ -230,6 +237,48 @@ export function AssignmentSubmissionsView({
     
     return true;
   });
+
+  const handlePreview = (doc: SubmissionDocument) => {
+    setPreviewDocument(doc);
+    setIsPreviewOpen(true);
+  };
+
+  const closePreview = () => {
+    if (isFullscreen && document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+    setIsPreviewOpen(false);
+    setPreviewDocument(null);
+    setIsFullscreen(false);
+  };
+
+  const toggleFullscreen = async () => {
+    const modalElement = document.getElementById('pdf-preview-modal-professor');
+    if (!modalElement) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await modalElement.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (err) {
+      console.error('Error toggling fullscreen:', err);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const getStatusBadge = (submission: Submission) => {
     // Verificar que score sea un número válido (no null ni undefined)
@@ -391,15 +440,26 @@ export function AssignmentSubmissionsView({
                           >
                             <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                             <span className="text-sm flex-1 truncate">{doc.name}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => window.open(doc.fileUrl, "_blank")}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                              title="Descargar archivo"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => handlePreview(doc)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Vista previa"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => window.open(doc.fileUrl, "_blank")}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Descargar archivo"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -420,6 +480,68 @@ export function AssignmentSubmissionsView({
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {isPreviewOpen && previewDocument && (
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
+          <div 
+            id="pdf-preview-modal-professor"
+            className="w-full h-full max-w-7xl max-h-[90vh] bg-background rounded-lg shadow-2xl flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-primary" />
+                <div>
+                  <h3 className="font-semibold">{previewDocument.name}</h3>
+                  <p className="text-xs text-muted-foreground">Vista previa de la entrega</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleFullscreen}
+                  className="gap-2"
+                  title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+                >
+                  {isFullscreen ? (
+                    <Minimize className="h-4 w-4" />
+                  ) : (
+                    <Maximize className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={closePreview}
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+
+            {/* PDF Viewer */}
+            <div className="flex-1 overflow-hidden relative bg-muted/50">
+              <iframe
+                src={`${previewDocument.fileUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                className="w-full h-full border-0"
+                title={previewDocument.name}
+                style={{
+                  pointerEvents: 'auto',
+                }}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{ userSelect: 'none' }}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

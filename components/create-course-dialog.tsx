@@ -45,16 +45,10 @@ const TABS = [
 ];
 
 const CATEGORIES = [
-  "Matemáticas",
-  "Lenguaje y Comunicación",
-  "Ciencias Naturales",
-  "Historia y Geografía",
-  "Inglés",
-  "Educación Física",
-  "Artes",
-  "Tecnología",
-  "Filosofía",
-  "Otra",
+  "Biología (0610)",
+  "Química (0620)",
+  "Física (0625)",
+  "Matemáticas (0580)",
 ];
 
 export function CreateCourseDialog({
@@ -73,7 +67,7 @@ export function CreateCourseDialog({
   const [objectives, setObjectives] = useState("");
   const [requirements, setRequirements] = useState("");
   const [category, setCategory] = useState("");
-  const [level, setLevel] = useState("primero");
+  const [level, setLevel] = useState("1o medio");
   const [tags, setTags] = useState("");
   const [durationHours, setDurationHours] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -90,7 +84,7 @@ export function CreateCourseDialog({
       setObjectives(initialData.objectives || "");
       setRequirements(initialData.requirements || "");
       setCategory(initialData.category || "");
-      setLevel(initialData.level || "primero");
+      setLevel(initialData.level || "1o medio");
       setTags(initialData.tags?.join(", ") || "");
       setDurationHours(initialData.duration_hours?.toString() || "");
       setStartDate(initialData.start_date ? initialData.start_date.split('T')[0] : "");
@@ -111,7 +105,7 @@ export function CreateCourseDialog({
     setObjectives("");
     setRequirements("");
     setCategory("");
-    setLevel("primero");
+    setLevel("1o medio");
     setTags("");
     setDurationHours("");
     setStartDate("");
@@ -208,15 +202,20 @@ export function CreateCourseDialog({
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || `Failed to ${initialData ? "update" : "create"} course`);
+        console.error("Error creating/updating course:", data);
+        const errorMessage = data.error || data.message || `Error al ${initialData ? "actualizar" : "crear"} el curso`;
+        setError(`${errorMessage} (Status: ${res.status})`);
         return;
       }
 
+      console.log("Course created/updated successfully:", data);
       onCourseCreated(data.course || data);
       resetForm();
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred. Please try again.");
+      console.error("Exception creating/updating course:", err);
+      const errorMessage = err instanceof Error ? err.message : "Ocurrió un error inesperado";
+      setError(`${errorMessage}. Por favor, intenta de nuevo.`);
     } finally {
       setLoading(false);
     }
@@ -226,10 +225,10 @@ export function CreateCourseDialog({
 
   const getLevelLabel = (level: string) => {
     switch (level) {
-      case "primero": return "1° Medio";
-      case "segundo": return "2° Medio";
-      case "tercero": return "3° Medio";
-      case "cuarto_medio": return "4° Medio";
+      case "1o medio": return "1° Medio";
+      case "2o medio": return "2° Medio";
+      case "3o medio": return "3° Medio";
+      case "4o medio": return "4° Medio";
       default: return level;
     }
   };
@@ -292,10 +291,10 @@ export function CreateCourseDialog({
                 onChange={(e) => setLevel(e.target.value)}
                 required
               >
-                <option value="primero">1° Medio</option>
-                <option value="segundo">2° Medio</option>
-                <option value="tercero">3° Medio</option>
-                <option value="cuarto_medio">4° Medio</option>
+                <option value="1o medio">1° Medio</option>
+                <option value="2o medio">2° Medio</option>
+                <option value="3o medio">3° Medio</option>
+                <option value="4o medio">4° Medio</option>
               </Select>
             </Field>
 

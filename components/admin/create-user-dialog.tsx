@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,9 +21,22 @@ export function CreateUserDialog({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<"student" | "professor">("professor");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setName("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      setRole("professor");
+      setError("");
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +46,13 @@ export function CreateUserDialog({
     // Validate password length
     if (password.length < 8) {
       setError("La contraseña debe tener al menos 8 caracteres");
+      setLoading(false);
+      return;
+    }
+
+    // Validate password confirmation
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden");
       setLoading(false);
       return;
     }
@@ -66,6 +86,7 @@ export function CreateUserDialog({
       setName("");
       setEmail("");
       setPassword("");
+      setConfirmPassword("");
       setRole("professor");
     } catch (err) {
       setError("Error al crear el usuario. Por favor, intenta de nuevo.");
@@ -136,6 +157,21 @@ export function CreateUserDialog({
                 />
                 <FieldDescription>
                   Debe tener al menos 8 caracteres.
+                </FieldDescription>
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="confirmPassword">Confirmar Contraseña</FieldLabel>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Confirma tu contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <FieldDescription>
+                  Ingresa nuevamente la contraseña para confirmar.
                 </FieldDescription>
               </Field>
 

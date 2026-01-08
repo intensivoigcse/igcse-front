@@ -54,6 +54,8 @@ export async function PATCH(
 
     const body = await request.json();
 
+    console.log(`[PATCH /api/inscriptions/${id}] Updating inscription with body:`, body);
+
     const res = await fetch(`${BACKEND_URL}/inscriptions/${id}`, {
       method: "PATCH",
       headers: {
@@ -65,15 +67,18 @@ export async function PATCH(
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
+      console.error(`[PATCH /api/inscriptions/${id}] Backend error (${res.status}):`, errorData);
       return Response.json(
-        { error: errorData.message || "Failed to update inscription" },
+        { error: errorData.message || errorData.error || "Failed to update inscription" },
         { status: res.status }
       );
     }
 
     const data = await res.json();
+    console.log(`[PATCH /api/inscriptions/${id}] Success:`, data);
     return Response.json(data);
-  } catch {
+  } catch (error) {
+    console.error(`[PATCH /api/inscriptions] Unexpected error:`, error);
     return Response.json(
       { error: "Internal server error" },
       { status: 500 }

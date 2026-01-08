@@ -6,7 +6,6 @@ import {
   Users, 
   BookOpen, 
   UserCheck, 
-  DollarSign, 
   ClipboardCheck,
   AlertCircle 
 } from "lucide-react";
@@ -21,8 +20,6 @@ interface Stats {
   totalInscriptions: number;
   pendingInscriptions: number;
   activeInscriptions: number;
-  totalDonations: number;
-  totalDonationsAmount: number;
   averageAttendance: number;
 }
 
@@ -41,33 +38,28 @@ export function AdminOverview() {
       setError("");
 
       // Fetch data from multiple endpoints
-      const [usersRes, coursesRes, inscriptionsRes, donationsRes] = await Promise.all([
+      const [usersRes, coursesRes, inscriptionsRes] = await Promise.all([
         fetch("/api/users"),
         fetch("/api/courses"),
         fetch("/api/inscriptions"),
-        fetch("/api/donations"),
       ]);
 
-      if (!usersRes.ok || !coursesRes.ok || !inscriptionsRes.ok || !donationsRes.ok) {
+      if (!usersRes.ok || !coursesRes.ok || !inscriptionsRes.ok) {
         throw new Error("Error al cargar las estadísticas");
       }
 
       const users = await usersRes.json();
       const courses = await coursesRes.json();
       const inscriptions = await inscriptionsRes.json();
-      const donations = await donationsRes.json();
 
       const usersArray = Array.isArray(users) ? users : users.users || [];
       const coursesArray = Array.isArray(courses) ? courses : courses.courses || [];
       const inscriptionsArray = Array.isArray(inscriptions) ? inscriptions : inscriptions.inscriptions || [];
-      const donationsArray = Array.isArray(donations) ? donations : donations.donations || [];
 
       const students = usersArray.filter((u: any) => u.role === "student");
       const professors = usersArray.filter((u: any) => u.role === "professor");
       const pending = inscriptionsArray.filter((i: any) => i.enrollment_status === "pending");
       const active = inscriptionsArray.filter((i: any) => i.enrollment_status === "active" || i.enrollment_status === "accepted");
-      const approvedDonations = donationsArray.filter((d: any) => d.status === "approved");
-      const totalAmount = approvedDonations.reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
 
       setStats({
         totalUsers: usersArray.length,
@@ -77,8 +69,6 @@ export function AdminOverview() {
         totalInscriptions: inscriptionsArray.length,
         pendingInscriptions: pending.length,
         activeInscriptions: active.length,
-        totalDonations: approvedDonations.length,
-        totalDonationsAmount: totalAmount,
         averageAttendance: 0, // TODO: Calcular desde datos de asistencia
       });
     } catch (err) {
@@ -116,7 +106,7 @@ export function AdminOverview() {
       )}
 
       {/* Estadísticas Principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Usuarios */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -155,22 +145,6 @@ export function AdminOverview() {
             <div className="text-2xl font-bold">{stats.totalInscriptions}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {stats.activeInscriptions} activas, {stats.pendingInscriptions} pendientes
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Donaciones */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Donaciones</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${stats.totalDonationsAmount.toLocaleString("es-CL")}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stats.totalDonations} donaciones aprobadas
             </p>
           </CardContent>
         </Card>
@@ -227,5 +201,3 @@ export function AdminOverview() {
     </div>
   );
 }
-
-

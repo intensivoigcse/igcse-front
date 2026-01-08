@@ -111,12 +111,6 @@ export function LoginForm({
                   {loading ? "Ingresando..." : "Ingresar"}
                 </Button>
               </Field>
-              <FieldDescription className="text-center">
-                ¿No tienes una cuenta?{" "}
-                <a href="/signup" className="underline">
-                  Regístrate
-                </a>
-              </FieldDescription>
             </FieldGroup>
           </form>
           <div className="bg-muted relative hidden md:block">

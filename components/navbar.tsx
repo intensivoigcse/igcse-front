@@ -32,7 +32,6 @@ export function Navbar() {
       return [
         { href: "/", label: "Inicio", icon: Home },
         { href: "/login", label: "Iniciar Sesión", icon: User },
-        { href: "/signup", label: "Registrarse", icon: User },
       ];
     }
 

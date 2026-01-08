@@ -309,6 +309,10 @@ export function StudentAssignmentsViewer({
         submission={selectedSubmission.submission}
         assignment={selectedSubmission.assignment}
         onBack={() => setSelectedSubmission(null)}
+        onSubmissionDeleted={() => {
+          setSelectedSubmission(null);
+          fetchAssignments();
+        }}
       />
     );
   }
