@@ -29,7 +29,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/ # Commented - needed for Next.js utilities
 lib64/
 parts/
 sdist/
