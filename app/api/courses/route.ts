@@ -55,6 +55,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log("Creating course with data:", JSON.stringify(body, null, 2));
+
     const res = await fetch(`${BACKEND_URL}/course`,
       {
         method: "POST",
@@ -67,18 +69,37 @@ export async function POST(request: NextRequest) {
     );
 
     if (!res.ok) {
-      const errorData = await res.json();
+      let errorData;
+      let errorText = "";
+      try {
+        errorText = await res.text();
+        console.error(`Backend error response (status ${res.status}):`, errorText);
+        errorData = errorText ? JSON.parse(errorText) : {};
+        console.error("Parsed error data:", errorData);
+      } catch (parseError) {
+        console.error("Failed to parse error response:", parseError);
+        console.error("Raw error text:", errorText);
+        errorData = { 
+          message: errorText || `Backend returned status ${res.status}`,
+          raw: errorText 
+        };
+      }
       return Response.json(
-        { error: errorData.message || "Failed to create course" },
+        { 
+          error: errorData.message || errorData.error || `Failed to create course (Status: ${res.status})`,
+          details: errorData,
+          status: res.status
+        },
         { status: res.status }
       );
     }
 
     const data = await res.json();
     return Response.json(data);
-  } catch {
+  } catch (error) {
+    console.error("Error in POST /api/courses:", error);
     return Response.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

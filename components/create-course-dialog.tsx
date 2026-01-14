@@ -84,7 +84,7 @@ export function CreateCourseDialog({
       setObjectives(initialData.objectives || "");
       setRequirements(initialData.requirements || "");
       setCategory(initialData.category || "");
-      setLevel(initialData.level || "1o medio");
+      setLevel(mapLevelFromBackend(initialData.level || ""));
       setTags(initialData.tags?.join(", ") || "");
       setDurationHours(initialData.duration_hours?.toString() || "");
       setStartDate(initialData.start_date ? initialData.start_date.split('T')[0] : "");
@@ -162,6 +162,26 @@ export function CreateCourseDialog({
     setCurrentTab((prev) => Math.max(prev - 1, 0));
   };
 
+  const mapLevelToBackend = (level: string): string => {
+    const levelMap: Record<string, string> = {
+      "1o medio": "primero",
+      "2o medio": "segundo",
+      "3o medio": "tercero",
+      "4o medio": "cuarto_medio",
+    };
+    return levelMap[level] || level;
+  };
+
+  const mapLevelFromBackend = (level: string): string => {
+    const levelMap: Record<string, string> = {
+      "primero": "1o medio",
+      "segundo": "2o medio",
+      "tercero": "3o medio",
+      "cuarto_medio": "4o medio",
+    };
+    return levelMap[level] || level || "1o medio";
+  };
+
   const handleSubmit = async (publishNow: boolean = false) => {
     if (!validateCurrentTab()) return;
 
@@ -180,7 +200,7 @@ export function CreateCourseDialog({
         objectives: objectives || null,
         requirements: requirements || null,
         category,
-        level,
+        level: mapLevelToBackend(level),
         tags: tagsArray,
         duration_hours: durationHours ? parseInt(durationHours) : null,
         start_date: startDate || null,
@@ -191,6 +211,8 @@ export function CreateCourseDialog({
         status: publishNow ? "published" : status,
       };
 
+      console.log("Sending course data:", courseData);
+
       const res = await fetch(url, {
         method,
         headers: {
@@ -199,12 +221,21 @@ export function CreateCourseDialog({
         body: JSON.stringify(courseData),
       });
 
-      const data = await res.json();
+      let data;
+      try {
+        const text = await res.text();
+        data = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        setError(`Error al procesar la respuesta del servidor (Status: ${res.status})`);
+        return;
+      }
 
       if (!res.ok) {
         console.error("Error creating/updating course:", data);
-        const errorMessage = data.error || data.message || `Error al ${initialData ? "actualizar" : "crear"} el curso`;
-        setError(`${errorMessage} (Status: ${res.status})`);
+        const errorMessage = data.error || data.message || data.details?.message || `Error al ${initialData ? "actualizar" : "crear"} el curso`;
+        const details = data.details ? ` Detalles: ${JSON.stringify(data.details)}` : "";
+        setError(`${errorMessage}${details} (Status: ${res.status})`);
         return;
       }
 
@@ -484,8 +515,8 @@ export function CreateCourseDialog({
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-3xl my-8">
-        <CardContent className="p-6">
+      <Card className="w-full max-w-3xl max-h-[95vh] my-8 flex flex-col">
+        <CardContent className="p-6 flex flex-col flex-1 overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">
               {initialData ? "Editar Curso" : "Crear Nuevo Curso"}
@@ -530,10 +561,10 @@ export function CreateCourseDialog({
           )}
 
           {/* Content */}
-          <div className="mb-6">{renderTabContent()}</div>
+          <div className="mb-6 flex-1 overflow-y-auto pr-2">{renderTabContent()}</div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex items-center justify-between pt-4 border-t flex-shrink-0">
             <Button
               type="button"
               variant="outline"

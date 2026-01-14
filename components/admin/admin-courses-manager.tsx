@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { ErrorMessage } from "@/components/error-message";
-import { Search, BookOpen, Users, FileText, Eye } from "lucide-react";
+import { Search, BookOpen, Users, FileText, Eye, Plus, Edit, Trash2 } from "lucide-react";
+import { CreateCourseDialog } from "@/components/create-course-dialog";
+import { DeleteCourseDialog } from "@/components/delete-course-dialog";
 
 interface Course {
   id: number;
@@ -28,6 +30,10 @@ export function AdminCoursesManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<CourseWithStats | null>(null);
 
   useEffect(() => {
     fetchCourses();
@@ -62,10 +68,14 @@ export function AdminCoursesManager() {
             // Fetch students count
             let studentsCount = 0;
             try {
-              const inscriptionsRes = await fetch(`/api/inscriptions/course/${course.id}/students`);
+              const inscriptionsRes = await fetch(`/api/courses/${course.id}/students`);
               if (inscriptionsRes.ok) {
                 const inscriptionsData = await inscriptionsRes.json();
-                studentsCount = inscriptionsData.totalStudents || 0;
+                // Try multiple possible response formats
+                studentsCount = inscriptionsData.totalStudents 
+                  || (inscriptionsData.students ? inscriptionsData.students.length : 0)
+                  || (Array.isArray(inscriptionsData) ? inscriptionsData.length : 0)
+                  || 0;
               }
             } catch (err) {
               console.error("Error fetching students count:", err);
@@ -106,6 +116,49 @@ export function AdminCoursesManager() {
     setFilteredCourses(filtered);
   };
 
+  const handleCreateCourse = () => {
+    setSelectedCourse(null);
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleEditCourse = (course: CourseWithStats) => {
+    setSelectedCourse(course);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteCourse = (course: CourseWithStats) => {
+    setSelectedCourse(course);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleCourseCreated = (course: Course) => {
+    setIsCreateDialogOpen(false);
+    setIsEditDialogOpen(false);
+    setSelectedCourse(null);
+    fetchCourses();
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedCourse) return;
+
+    try {
+      const res = await fetch(`/api/courses/${selectedCourse.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || "Error al eliminar el curso");
+      }
+
+      setIsDeleteDialogOpen(false);
+      setSelectedCourse(null);
+      fetchCourses();
+    } catch (err) {
+      throw err;
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner text="Cargando cursos..." />;
   }
@@ -117,11 +170,17 @@ export function AdminCoursesManager() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold">Gestión de Cursos</h2>
-        <p className="text-muted-foreground">
-          Total: {filteredCourses.length} cursos
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Gestión de Cursos</h2>
+          <p className="text-muted-foreground">
+            Total: {filteredCourses.length} cursos
+          </p>
+        </div>
+        <Button onClick={handleCreateCourse} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Crear Curso
+        </Button>
       </div>
 
       {/* Search */}
@@ -188,13 +247,54 @@ export function AdminCoursesManager() {
                     onClick={() => window.location.href = `/courses/${course.id}`}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    Ver Detalles
+                    Ver
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditCourse(course)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteCourse(course)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Create/Edit Course Dialog */}
+      {(isCreateDialogOpen || isEditDialogOpen) && (
+        <CreateCourseDialog
+          open={isCreateDialogOpen || isEditDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsCreateDialogOpen(false);
+              setIsEditDialogOpen(false);
+              setSelectedCourse(null);
+            }
+          }}
+          onCourseCreated={handleCourseCreated}
+          initialData={selectedCourse || undefined}
+        />
+      )}
+
+      {/* Delete Course Dialog */}
+      {isDeleteDialogOpen && selectedCourse && (
+        <DeleteCourseDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          courseTitle={selectedCourse.title}
+          onDelete={handleDeleteConfirm}
+        />
       )}
     </div>
   );

@@ -29,6 +29,7 @@ import { StudentForumsViewer } from "@/components/student-forums-viewer";
 import { ForumThreadView, type ForumThread } from "@/components/forum-thread-view";
 import { CourseAttendanceManager } from "@/components/course-attendance-manager";
 import { StudentAttendanceViewer } from "@/components/student-attendance-viewer";
+import { DeleteCourseDialog } from "@/components/delete-course-dialog";
 import type { Assignment } from "@/lib/mock-course-data";
 
 interface Course {
@@ -93,6 +94,7 @@ export default function CourseDetailPage() {
   const [enrollmentAcceptedAt, setEnrollmentAcceptedAt] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // Teacher management state
   const [activeSection, setActiveSection] = useState<SectionType>("overview");
@@ -255,23 +257,27 @@ export default function CourseDetailPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (!confirm("¿Estás seguro de que deseas eliminar este curso?")) return;
-
+  const handleDeleteCourse = async () => {
     try {
       const res = await fetch(`/api/courses/${courseId}`, {
         method: "DELETE",
       });
 
-      if (res.ok) {
-        router.push("/dashboard");
-      } else {
+      if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        alert(errorData.error || "Error al eliminar el curso");
+        throw new Error(errorData.error || errorData.message || "Error al eliminar el curso");
       }
+
+      // Redirect to dashboard after successful deletion
+      router.push("/dashboard");
     } catch (err) {
-      alert("Error al eliminar el curso. Por favor, intenta de nuevo.");
+      // Re-throw error to be handled by the dialog
+      throw err;
     }
+  };
+
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
   };
 
   const handleCourseUpdated = (updatedCourse: Partial<Course> & { title: string; description: string }) => {
@@ -388,6 +394,7 @@ export default function CourseDetailPage() {
             onCreateAssignment={() => setActiveSection("assignments")}
             onCreateAnnouncement={() => setActiveSection("announcements")}
             onSectionChange={(section) => setActiveSection(section)}
+            onDeleteCourse={handleDeleteClick}
           />
         );
       case "students":
@@ -537,7 +544,7 @@ export default function CourseDetailPage() {
             onEnroll={handleEnroll}
             onUnenroll={handleUnenroll}
             onEdit={handleEdit}
-            onDelete={handleDelete}
+            onDelete={handleDeleteClick}
           />
 
           {/* Mensaje informativo si está inscrito pero no aceptado */}
@@ -645,6 +652,16 @@ export default function CourseDetailPage() {
         currentFolderId={currentFolderIdForUpload}
         onUploadSuccess={handleMaterialsRefresh}
       />
+
+      {/* Delete course dialog */}
+      {userIsTeacher && course && (
+        <DeleteCourseDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          courseTitle={course.title}
+          onDelete={handleDeleteCourse}
+        />
+      )}
 
       {/* Create folder dialog */}
       <CreateFolderDialog

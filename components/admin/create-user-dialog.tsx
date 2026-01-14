@@ -91,9 +91,9 @@ export function CreateUserDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardContent className="p-6">
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <Card className="w-full max-w-md max-h-[95vh] my-8 flex flex-col">
+        <CardContent className="p-6 flex flex-col overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Crear Usuario</h2>
             <Button

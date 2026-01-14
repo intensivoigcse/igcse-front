@@ -11,7 +11,9 @@ import {
   TrendingUp, 
   Clock,
   Plus,
-  CheckCircle2
+  CheckCircle2,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 
 interface OverviewProps {
@@ -19,6 +21,7 @@ interface OverviewProps {
   onCreateAssignment?: () => void;
   onCreateAnnouncement?: () => void;
   onSectionChange?: (section: "assignments" | "announcements" | "students" | "forums") => void;
+  onDeleteCourse?: () => void;
 }
 
 interface CourseStats {
@@ -83,7 +86,8 @@ export function CourseManagementOverview({
   courseId, 
   onCreateAssignment,
   onCreateAnnouncement,
-  onSectionChange
+  onSectionChange,
+  onDeleteCourse
 }: OverviewProps) {
   const [stats, setStats] = useState<CourseStats>({
     totalStudents: 0,
@@ -533,6 +537,34 @@ export function CourseManagementOverview({
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Course Section */}
+      {onDeleteCourse && (
+        <Card className="border-destructive/20">
+          <CardHeader>
+            <CardTitle className="text-lg text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Zona de Peligro
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Una vez eliminado, el curso no podrá ser recuperado. Esta acción eliminará
+                permanentemente todos los materiales, tareas, anuncios, foros y datos asociados.
+              </p>
+              <Button
+                variant="destructive"
+                onClick={onDeleteCourse}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Eliminar Curso
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
