@@ -131,7 +131,12 @@ export function AdminCoursesManager() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleCourseCreated = (course: Course) => {
+  const handleCourseCreated = (course: {
+    id?: string | number;
+    title: string;
+    description: string;
+    [key: string]: any;
+  }) => {
     setIsCreateDialogOpen(false);
     setIsEditDialogOpen(false);
     setSelectedCourse(null);
@@ -283,7 +288,23 @@ export function AdminCoursesManager() {
             }
           }}
           onCourseCreated={handleCourseCreated}
-          initialData={selectedCourse || undefined}
+          initialData={selectedCourse ? {
+            id: String(selectedCourse.id),
+            title: selectedCourse.title,
+            description: selectedCourse.description,
+            objectives: (selectedCourse as any).objectives,
+            requirements: (selectedCourse as any).requirements,
+            category: (selectedCourse as any).category,
+            level: (selectedCourse as any).level,
+            tags: (selectedCourse as any).tags,
+            duration_hours: (selectedCourse as any).duration_hours,
+            start_date: (selectedCourse as any).start_date,
+            end_date: (selectedCourse as any).end_date,
+            max_students: (selectedCourse as any).max_students,
+            modality: (selectedCourse as any).modality,
+            schedule: (selectedCourse as any).schedule,
+            status: (selectedCourse as any).status,
+          } : undefined}
         />
       )}
 
