@@ -532,8 +532,8 @@ export function CreateCourseDialog({
           </div>
 
           {/* Tabs */}
-          <div className="mb-6 overflow-x-auto">
-            <div className="flex gap-2 min-w-max">
+          <div className="mb-6">
+            <div className="grid grid-cols-4 gap-2">
               {TABS.map((tab, index) => (
                 <button
                   key={tab.id}
@@ -542,7 +542,7 @@ export function CreateCourseDialog({
                       setCurrentTab(index);
                     }
                   }}
-                  className={`px-4 py-2 text-sm rounded-md transition-colors whitespace-nowrap ${
+                  className={`px-3 py-2 text-xs sm:text-sm rounded-md transition-colors whitespace-nowrap text-center ${
                     currentTab === index
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted hover:bg-muted/80"
